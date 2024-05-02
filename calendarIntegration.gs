@@ -5,7 +5,7 @@
 //            e[2] : Ora
 //            e[3] : EventId (Colonna D)
 //            e[4] : Titolo
-//            e[10]: Descrizione
+//            e[9]: Descrizione
 //2024 Daniele Di Francesco
 
 const calendarId = "de360f6f630ade439750b9513a84284b0862240c835b65dfee3afcc69db761a7@group.calendar.google.com"
@@ -17,13 +17,14 @@ function createCalendarEvent() {
   let count = 2;
 	
   var prevTitle;
+  var prevEventId;
   var prevDate = new Date('December 17, 1995 03:24:00');
   
   // Creates an event for each item in events array   
 	events.forEach(function(e){
 
     var title = e[4];
-    var description = e[10];
+    var description = e[9];
         
     //Apparently complex date parsing and concat
     var startDateRaw = new Date (e[1]);
@@ -58,17 +59,18 @@ function createCalendarEvent() {
       eventCellRange = "D"+count;
       eventCell = ss.getRange(eventCellRange);
       if (prevDate.getTime() == startDate.getTime() && prevTitle.localeCompare(title) == 0){
-        eventCell.setValue("Duplicato");
+        eventCell.setValue(prevEventId);
       } else {
         //Logger.log("Creating event named " + title + " from " + startDate + " until " + endDate);
     	  var event = CalendarApp.getCalendarById(calendarId).createEvent(title,startDate,endDate, {description: description});
         //Logger.log('Event successfully created with Id: ' + event.getId());
-        //Writing the event ID
-        eventCell.setValue(event.getId());
+        var eventId = event.getId();
+        eventCell.setValue(eventId); //Writing the event ID
       }
       prevDate = startDate;
     }
     prevTitle = title;
+    prevEventId = eventId;
     count++;     
   })
 }
@@ -78,17 +80,32 @@ function deleteAllEvents(){
     var startDate = new Date ('2024-01-01');
     var endDate = new Date ('2044-01-01');
     //Logger.log('Deleting events starting from: ' + startDate + ' up to: ' + endDate);
-
-    var replace_with = ""; //Leave blank to delete Text
-    var lastRow = ss.getLastRow();
-    var ranges = ['D2:D' + lastRow];
-
-    //Cycle through all events and delete them and delete the eventId in the sheet
-    var allEvents = CalendarApp.getCalendarById(calendarId).getEvents(startDate,endDate);
-    for (var e=0;e<allEvents.length;e++){
-      var to_replace = allEvents[e].getId();
-      allEvents[e].deleteEvent();
-      ss.getRangeList(ranges).getRanges().forEach(r => r.createTextFinder(to_replace).matchEntireCell(true).replaceAllWith(replace_with));
-    } 
-    //Logger.log('Deleted ' + allEvents.length + ' events');
+    deleteEvents(startDate,endDate);
 }
+
+function deleteDaysEvents(days){
+  var ttn = Date.now();
+  var startDate = new Date(ttn);
+  var daysInMillis = days * 24 * 60 * 60 * 1000;
+  var result = startDate.getTime() + daysInMillis;
+  var endDate = new Date(result);
+  //Logger.log("startDate: " + startDate);
+  //Logger.log("endDate: " + endDate);
+  deleteEvents(startDate,endDate);
+}
+
+function deleteEvents(startDate, endDate){
+  var replace_with = ""; //Leave blank to delete Text
+  var lastRow = ss.getLastRow();
+  var ranges = ['D2:D' + lastRow];
+
+  //Cycle through all events and delete them and delete the eventId in the sheet
+  var allEvents = CalendarApp.getCalendarById(calendarId).getEvents(startDate,endDate);
+  for (var e=0;e<allEvents.length;e++){
+    var to_replace = allEvents[e].getId();
+    allEvents[e].deleteEvent();
+    ss.getRangeList(ranges).getRanges().forEach(r => r.createTextFinder(to_replace).matchEntireCell(true).replaceAllWith(replace_with));
+  } 
+  //Logger.log('Deleted ' + allEvents.length + ' events');
+}
+    

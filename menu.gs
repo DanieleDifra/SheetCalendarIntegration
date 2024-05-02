@@ -4,18 +4,40 @@ function onOpen() {
   var ui = SpreadsheetApp.getUi();
   // Or DocumentApp, SlidesApp or FormApp.
   ui.createMenu('Scripts')
-      .addItem('Add To Calendar', 'menuItem1')
-      .addItem('Delete From Calendar', 'menuItem2')
+      .addItem('Add To Calendar', 'addToCalendar')
+      .addSubMenu(ui.createMenu('Delete From Calendar')
+        .addItem('7 days', 'delete7days')
+        .addItem('15 days', 'delete15days')
+        .addItem('30 days', 'delete30days')
+        .addItem('All', 'deleteFromCalendar'))
       .addToUi();
 }
 
-function menuItem1() {
+function addToCalendar() {
   createCalendarEvent();
   SpreadsheetApp.getUi()
      .alert('Added events in calendar!');
 }
 
-function menuItem2() {
+function delete7days() {
+  deleteDaysEvents(7);
+  SpreadsheetApp.getUi()
+     .alert('Deleted 7 days of events from calendar');
+}
+
+function delete15days() {
+  deleteDaysEvents(15);
+  SpreadsheetApp.getUi()
+     .alert('Deleted all events from calendar');
+}
+
+function delete30days() {
+  deleteDaysEvents(30);
+  SpreadsheetApp.getUi()
+     .alert('Deleted all events from calendar');
+}
+
+function deleteFromCalendar() {
   deleteAllEvents();
   SpreadsheetApp.getUi()
      .alert('Deleted all events from calendar');
